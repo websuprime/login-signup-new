@@ -13,61 +13,84 @@ function input_data($data)
     return $data;
 }
 
+// Function to check if a username already exists
+function isUsernameTaken($conn, $username)
+{
+    $username = $conn->real_escape_string($username);
+    $sql = "SELECT * FROM users WHERE username = '$username'";
+    $result = $conn->query($sql);
+    return $result->num_rows > 0;
+}
+
+// Function to check if an email already exists
+function isEmailTaken($conn, $email)
+{
+    $email = $conn->real_escape_string($email);
+    $sql = "SELECT * FROM users WHERE email = '$email'";
+    $result = $conn->query($sql);
+    return $result->num_rows > 0;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Initialize array to store validation errors
+    $errors = array();
+
+    // Validate Full Name
     if (empty($_POST['full-name'])) {
-        $nameErr = "Name is required";
+        $errors['full-name'] = "Name is required";
     } else {
         $fullName = input_data($_POST['full-name']);
         if (!preg_match("/^[a-zA-Z ]*$/", $fullName)) {
-            $nameErr = "Only alphabets and white space are allowed";
+            $errors['full-name'] = "Full name Only alphabets and white space are allowed";
         }
     }
 
+    // Validate Username
     if (empty($_POST['username'])) {
-        $usernameErr = "Username is required";
+        $errors['username'] = "Username is required";
     } else {
         $username = input_data($_POST['username']);
-        $sql = "SELECT * FROM users WHERE username = '$username'";
-        $result = $conn->query($sql);
-        if ($result->num_rows > 0) {
-            $usernameErr = "Username already exists";
+        if (!preg_match("/^[a-zA-Z0-9]*$/", $username)) {
+            $errors['username'] = "Username can only contain letters and numbers";
+        } else if (isUsernameTaken($conn, $username)) {
+            $errors['username'] = "Username already exists";
         }
     }
 
+    // Validate Email
     if (empty($_POST['email'])) {
-        $emailErr = "Email is required";
+        $errors['email'] = "Email is required";
     } else {
         $email = input_data($_POST['email']);
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $emailErr = "Invalid email format";
-        } else {
-            $sql = "SELECT * FROM users WHERE email = '$email'";
-            $result = $conn->query($sql);
-            if ($result->num_rows > 0) {
-                $emailErr = "Email already exists";
-            }
+            $errors['email'] = "Invalid email format";
+        } else if (isEmailTaken($conn, $email)) {
+            $errors['email'] = "Email already exists";
         }
     }
 
+    // Validate Password
     if (empty($_POST['password'])) {
-        $passwordErr = "Password is required";
+        $errors['password'] = "Password is required";
     } else {
         $password = input_data($_POST['password']);
         if (!preg_match("/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{6,}$/", $password)) {
-            $passwordErr = "Password must be at least 6 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+            $errors['password'] = "Password must be at least 6 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
         }
     }
 
+    // Validate Confirm Password
     if (empty($_POST['confirm-password'])) {
-        $confirmPasswordErr = "Confirm Password is required";
+        $errors['confirm-password'] = "Confirm Password is required";
     } else {
         $confirmPassword = input_data($_POST['confirm-password']);
         if ($password !== $confirmPassword) {
-            $confirmPasswordErr = "Passwords do not match";
+            $errors['confirm-password'] = "Passwords do not match";
         }
     }
 
-    if (empty($nameErr) && empty($usernameErr) && empty($emailErr) && empty($passwordErr) && empty($confirmPasswordErr)) {
+    // If there are no validation errors, proceed with inserting into database
+    if (empty($errors)) {
         $fullName = $conn->real_escape_string($fullName);
         $username = $conn->real_escape_string($username);
         $email = $conn->real_escape_string($email);
@@ -78,24 +101,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $sql = "INSERT INTO users (full_name, username, email, password) VALUES ('$fullName', '$username', '$email', '$hashedPassword')";
 
         if ($conn->query($sql) === TRUE) {
-            $response = array("success" => true, "message" => "Signup successful!");
-            echo json_encode($response);
+            echo json_encode(array('success' => true, 'message' => 'Signup successful!'));
         } else {
-            $response = array("success" => false, "message" => "Error: " . $sql . "<br>" . $conn->error);
-            echo json_encode($response);
+            echo json_encode(array('success' => false, 'message' => 'Error: ' . $sql . '<br>' . $conn->error));
         }
     } else {
-        $response = array(
-            "success" => false,
-            "errors" => [
-                "fullName" => $nameErr,
-                "username" => $usernameErr,
-                "email" => $emailErr,
-                "password" => $passwordErr,
-                "confirmPassword" => $confirmPasswordErr
-            ]
-        );
-        echo json_encode($response);
+        // Store errors in session for display on signup.php
+        $_SESSION['errors'] = $errors;
+        $_SESSION['fullName'] = $fullName;
+        $_SESSION['username'] = $username;
+        $_SESSION['email'] = $email;
+
+        echo json_encode(array('success' => false, 'errors' => $errors));
     }
 
     $conn->close();
