@@ -20,7 +20,7 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <h3 class="mb-4">Signup</h3>
-                <form id="signupForm" method="post" action="signupProcess.php">
+                <form id="signupForm" method="post" action="signupProcess.php" novalidate>
                     <div class="form-group">
                         <label for="full-name">Name:</label>
                         <input type="text" class="form-control" id="full-name" name="full-name" placeholder="Full Name" >

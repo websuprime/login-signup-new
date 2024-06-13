@@ -70,21 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Validate Password
-    if (empty($_POST['password'])) {
-        $errors['password'] = "Password is required";
-    } else {
-        $password = input_data($_POST['password']);
-        if (!preg_match("/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{6,}$/", $password)) {
-            $errors['password'] = "Password must be at least 6 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
-        }
+    if (empty($_POST['password']) || !preg_match("/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{6,}$/", input_data($_POST['password']))) {
+        $errors['password'] = empty($_POST['password']) ? "Password is required" : "Password must be at least 6 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
     }
+
 
     // Validate Confirm Password
     if (empty($_POST['confirm-password'])) {
         $errors['confirm-password'] = "Confirm Password is required";
     } else {
         $confirmPassword = input_data($_POST['confirm-password']);
-        if ($password !== $confirmPassword) {
+        if ($_POST['password'] !== $confirmPassword) {
             $errors['confirm-password'] = "Passwords do not match";
         }
     }
