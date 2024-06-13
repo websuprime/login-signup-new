@@ -1,0 +1,63 @@
+/* Body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding-top: 50px; /* Adjust as needed */
+    text-align: center; /* Center align the form */
+}
+
+/* Container styles */
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form styles */
+#signupForm {
+    margin-top: 20px;
+}
+
+#signupForm .form-label {
+    font-weight: bold;
+}
+
+#signupForm .form-control {
+    margin-bottom: 10px;
+}
+
+#signupForm .btn-primary {
+    background-color: #5cb85c;
+    border-color: #5cb85c;
+    width: 100%;
+}
+
+#signupForm .btn-primary:hover {
+    background-color: #4cae4c;
+    border-color: #4cae4c;
+}
+
+/* Error message styles */
+.form-text {
+    color: red;
+    font-size: 0.9em;
+    text-align: left;
+    margin-top: 5px;
+}
+
+/* Link styles */
+#signupForm h3 {
+    margin-top: 20px;
+}
+
+#signupForm h3 a {
+    color: #5cb85c;
+}
+
+#signupForm h3 a:hover {
+    text-decoration: none;
+    color: #4cae4c;
+}

@@ -78,25 +78,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $sql = "INSERT INTO users (full_name, username, email, password) VALUES ('$fullName', '$username', '$email', '$hashedPassword')";
 
         if ($conn->query($sql) === TRUE) {
-            echo "Signup successful!";
-            header("Location: login.php");
-            exit();
+            $response = array("success" => true, "message" => "Signup successful!");
+            echo json_encode($response);
         } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
+            $response = array("success" => false, "message" => "Error: " . $sql . "<br>" . $conn->error);
+            echo json_encode($response);
         }
     } else {
-        $_SESSION['nameErr'] = $nameErr;
-        $_SESSION['usernameErr'] = $usernameErr;
-        $_SESSION['emailErr'] = $emailErr;
-        $_SESSION['passwordErr'] = $passwordErr;
-        $_SESSION['confirmPasswordErr'] = $confirmPasswordErr;
-
-        $_SESSION['fullName'] = $fullName;
-        $_SESSION['username'] = $username;
-        $_SESSION['email'] = $email;
-
-        header("Location: signup.php");
-        exit();
+        $response = array(
+            "success" => false,
+            "errors" => [
+                "fullName" => $nameErr,
+                "username" => $usernameErr,
+                "email" => $emailErr,
+                "password" => $passwordErr,
+                "confirmPassword" => $confirmPasswordErr
+            ]
+        );
+        echo json_encode($response);
     }
 
     $conn->close();
