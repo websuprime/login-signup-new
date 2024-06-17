@@ -1,3 +1,4 @@
+<!-- loginProcess.php -->
 <?php
 include "db.php";
 
@@ -6,14 +7,13 @@ ini_set('session.use_only_cookies', 1);
 session_start();
 
 $conn = new mysqli($servername, $username, $password, $dbname);
-
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    echo json_encode(['success' => false, 'message' => 'Connection failed: ' . $conn->connect_error]);
+    exit();
 }
 
 if (empty($_POST['username']) || empty($_POST['password'])) {
-    $_SESSION['error'] = "Username and password are required.";
-    header("Location: login.php");
+    echo json_encode(['success' => false, 'message' => 'Username and password are required.']);
     exit();
 }
 
@@ -24,8 +24,7 @@ if (isset($_SESSION['login_attempts'])) {
 }
 
 if ($_SESSION['login_attempts'] > 3) {
-    $_SESSION['error'] = "Too many login attempts. Please try again later.";
-    header("Location: forgot_password.php");
+    echo json_encode(['success' => false, 'message' => 'Too many login attempts. Please try again later.']);
     exit();
 }
 
@@ -36,33 +35,32 @@ $login = $conn->real_escape_string($login);
 $pass = $conn->real_escape_string($pass);
 
 if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
-    $sql = "SELECT * FROM users WHERE email = '$login'";
+    $sql = "SELECT * FROM users WHERE email = ?";
 } else {
-    $sql = "SELECT * FROM users WHERE username = '$login'";
+    $sql = "SELECT * FROM users WHERE username = ?";
 }
 
-$result = $conn->query($sql);
-
-if (!$result) {
-    die("Error executing query: " . $conn->error);
-}
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $login);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
 
+    // Debugging: Check what is retrieved from the database
+    error_log('Retrieved hashed password: ' . $row['password']);
+
     if (password_verify($pass, $row['password'])) {
         $_SESSION['username'] = $row['username'];
-        header("Location: index2.php");
-        exit();
+        $_SESSION['login_attempts'] = 0; // Reset login attempts on successful login
+        echo json_encode(['success' => true]);
     } else {
-        $_SESSION['error'] = "Invalid password.";
-        header("Location: login.php");
-        exit();
+        echo json_encode(['success' => false, 'message' => 'Invalid password.']);
     }
 } else {
-    $_SESSION['error'] = "No user found with that username or email.";
-    header("Location: login.php");
-    exit();
+    echo json_encode(['success' => false, 'message' => 'No user found with that username or email.']);
 }
 
+$stmt->close();
 $conn->close();
