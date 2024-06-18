@@ -16,7 +16,7 @@ function input_data($data)
 $response = array('success' => false, 'message' => '', 'errors' => array());
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
+    // Validate and sanitize form data
     $token = isset($_POST['token']) ? input_data($_POST['token']) : '';
     $new_password = isset($_POST['new_password']) ? input_data($_POST['new_password']) : '';
     $confirm_password = isset($_POST['confirm_password']) ? input_data($_POST['confirm_password']) : '';
@@ -29,21 +29,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($response['errors'])) {
-        // Validate token and update password in the database
-        $sql = "SELECT * FROM users WHERE reset_token = '$token'";
-        $result = $conn->query($sql);
-
-        if ($result->num_rows > 0) {
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-            $row = $result->fetch_assoc();
-            $user_id = $row["id"];
-            $sql_update = "UPDATE users SET password = '$hashed_password', reset_token = NULL WHERE id = $user_id";
-            $conn->query($sql_update);
-
-            $response['success'] = true;
-            $response['message'] = 'Password reset successfully';
+        // Connect to database (assuming $conn is defined in db.php)
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        if ($conn->connect_error) {
+            $response['message'] = 'Connection failed: ' . $conn->connect_error;
         } else {
-            $response['message'] = 'Invalid token';
+            // Validate token and update password in the database
+            $token = $conn->real_escape_string($token);
+            $sql = "SELECT * FROM users WHERE reset_token = '$token'";
+            $result = $conn->query($sql);
+
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $user_id = $row["id"];
+                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                $sql_update = "UPDATE users SET password = '$hashed_password', reset_token = NULL WHERE id = $user_id";
+
+                if ($conn->query($sql_update) === TRUE) {
+                    $response['success'] = true;
+                    $response['message'] = 'Password reset successfully';
+                } else {
+                    $response['message'] = 'Error updating password: ' . $conn->error;
+                }
+            } else {
+                $response['message'] = 'Invalid token';
+            }
+
+            $conn->close();
         }
     } else {
         $response['message'] = 'There were errors with your submission';

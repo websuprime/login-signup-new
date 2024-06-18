@@ -1,4 +1,3 @@
-<!-- loginProcess.php -->
 <?php
 include "db.php";
 
@@ -32,7 +31,6 @@ $login = $_POST['username'];
 $pass = $_POST['password'];
 
 $login = $conn->real_escape_string($login);
-$pass = $conn->real_escape_string($pass);
 
 if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
     $sql = "SELECT * FROM users WHERE email = ?";
@@ -48,17 +46,18 @@ $result = $stmt->get_result();
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
 
-    // Debugging: Check what is retrieved from the database
-    error_log('Retrieved hashed password: ' . $row['password']);
-
+    // Verify hashed password
     if (password_verify($pass, $row['password'])) {
+        // Password is correct, set session variables
         $_SESSION['username'] = $row['username'];
         $_SESSION['login_attempts'] = 0; // Reset login attempts on successful login
         echo json_encode(['success' => true]);
     } else {
+        // Password is incorrect
         echo json_encode(['success' => false, 'message' => 'Invalid password.']);
     }
 } else {
+    // No user found with given username or email
     echo json_encode(['success' => false, 'message' => 'No user found with that username or email.']);
 }
 

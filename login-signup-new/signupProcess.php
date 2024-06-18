@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         $fullName = input_data($_POST['full-name']);
         if (!preg_match("/^[a-zA-Z ]*$/", $fullName)) {
-            $errors['full-name'] = "Full name Only alphabets and white space are allowed";
+            $errors['full-name'] = "Only alphabets and white space are allowed";
         }
     }
 
@@ -74,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['password'] = empty($_POST['password']) ? "Password is required" : "Password must be at least 6 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
     }
 
-
     // Validate Confirm Password
     if (empty($_POST['confirm-password'])) {
         $errors['confirm-password'] = "Confirm Password is required";
@@ -90,8 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $fullName = $conn->real_escape_string($fullName);
         $username = $conn->real_escape_string($username);
         $email = $conn->real_escape_string($email);
-        $password = $conn->real_escape_string($password);
+        $password = $conn->real_escape_string($_POST['password']); // Don't modify password before hashing
 
+        // Hash Password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         $sql = "INSERT INTO users (full_name, username, email, password) VALUES ('$fullName', '$username', '$email', '$hashedPassword')";
