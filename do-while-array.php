@@ -4,7 +4,9 @@ $b = array("a", "b");
 $c = array("a", "b", "c", "d");
 $d = array("a", "b", "c", "d", "e");
 
-$maxl2 = max(count($a), count($b), count($c), count($d));
+$maxl2 = max(count($a), count($b), count($c), count($d)); 
+
+/* idhsidjhdi */
 
 $t = [];
 $y = [];
